@@ -1,0 +1,165 @@
+
+#smart-text-saver-btn {
+  position: absolute;
+  display: none;
+  background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  z-index: 2147483647;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  user-select: none;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  letter-spacing: 0.3px;
+}
+
+#smart-text-saver-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(15, 52, 96, 0.5);
+  background: linear-gradient(135deg, #16213e 0%, #1a5b8f 100%);
+}
+
+#smart-text-saver-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Success state */
+#smart-text-saver-btn.success {
+  background: linear-gradient(135deg, #0a4d68 0%, #088395 100%) !important;
+  animation: successPulse 0.5s ease;
+}
+
+/* Error state */
+#smart-text-saver-btn.error {
+  background: linear-gradient(135deg, #1a1a2e 0%, #3d2645 100%) !important;
+  animation: errorShake 0.5s ease;
+}
+
+/* Loading state */
+#smart-text-saver-btn.loading {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+#smart-text-saver-btn.loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 50%;
+  right: 8px;
+  margin-top: -8px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 0.6s linear infinite;
+}
+
+/* Animations */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes successPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes errorShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#smart-text-saver-btn.show {
+  animation: fadeIn 0.2s ease;
+}
+
+/* Tooltip arrow (optional enhancement) */
+#smart-text-saver-btn::before {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  margin-left: -6px;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #0f3460;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.2));
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+  #smart-text-saver-btn {
+    padding: 10px 18px;
+    font-size: 15px;
+    touch-action: manipulation;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  #smart-text-saver-btn {
+    border: 3px solid white;
+    font-weight: 700;
+    background: linear-gradient(135deg, #000000 0%, #1a3a52 100%);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  #smart-text-saver-btn,
+  #smart-text-saver-btn:hover,
+  #smart-text-saver-btn:active {
+    transition: none;
+    animation: none;
+  }
+  
+  #smart-text-saver-btn.loading::after {
+    animation: none;
+    border-top-color: rgba(255, 255, 255, 0.5);
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  #smart-text-saver-btn {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+  
+  #smart-text-saver-btn:hover {
+    box-shadow: 0 6px 16px rgba(15, 52, 96, 0.7);
+  }
+}
