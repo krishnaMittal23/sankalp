@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Interview {
+  id           String       @id @default(cuid())
+  userName     String?
+  role         String
+  status       String       @default("active")
+  skills       String[]
+  
+  analysisSessionActive Boolean @default(false)
+  bodyLanguageScore     Float?
+  voiceToneScore        Float?
+  combinedScore         Float?
+  overallStatus         String?
+  
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  
+  questions    Question[]
+  transcripts  Transcript[]
+  reports      Report[]
+}
+
+model Question {
+  id          String       @id @default(cuid())
+  interviewId String
+  text        String
+  order       Int
+  
+  audioGenerated Boolean   @default(false)
+  
+  createdAt   DateTime     @default(now())
+  
+  interview   Interview    @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  transcripts Transcript[]
+  
+  @@index([interviewId])
+}
+
+model Transcript {
+  id          String   @id @default(cuid())
+  interviewId String
+  questionId  String
+  transcript  String   @db.Text
+  
+  evaluation  String?  @db.Text
+  
+  responseScore      Float?
+  voiceToneScore     Float?
+  bodyLanguageScore  Float?
+  finalScore         Float?
+  
+  voiceAnalysis   Json?
+  evaluatedAt     DateTime?
+  
+  createdAt   DateTime @default(now())
+  
+  interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  question    Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  @@index([interviewId])
+  @@index([questionId])
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  interviewId String   @unique
+  content     String   @db.Text
+  
+  analysisData Json?
+  
+  avgResponseScore      Float?
+  avgVoiceToneScore     Float?
+  avgBodyLanguageScore  Float?
+  overallScore          Float?
+  
+  createdAt   DateTime @default(now())
+  
+  interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  
+  @@index([interviewId])
+}
+
+model UserMemory {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String   // "last_summary", "strength", "weakness", "focus_topic"
+  content   String   // textual memory
+  metadata  Json?    // e.g., { score: 72, topic: "databases", createdAt: ... }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model SkillSnapshot {
+  id        String   @id @default(uuid())
+  userId    String
+  skill     String
+  score     Float
+  source    String   // e.g., "interview_123"
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model UserAggregate {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  avgScore      Float?
+  lastInterview DateTime?
+  strengths     Json?    // ["system design", "testing"]
+  weaknesses    Json?    // ["behavioral", "communication"]
+  updatedAt     DateTime @updatedAt
+}

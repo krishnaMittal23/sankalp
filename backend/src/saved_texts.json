@@ -1,0 +1,32 @@
+{
+  "texts": [
+    {
+      "id": "1760263974628",
+      "text": "Software Engineer I The Walt Disney Company • 1 learning steps   1 Advanced Skills Development You already have the fundamental skills for Software Engineer I. Focus on advanced topics and real-world projects.  2-3 months 0 skills 1 resources Learning Resources Search for relevant tutorials Explore online courses and documentation  https://www.google.com/search?q=learn+Software%20Engineer%20I",
+      "url": "http://localhost:3000/dashboard/roadmap",
+      "title": "Next Step",
+      "timestamp": "2025-10-12T10:12:54.548Z"
+    },
+    {
+      "id": "1760259211110",
+      "text": "Transform Your Career with AI-Powered Guidance",
+      "url": "http://localhost:3000/",
+      "title": "Next Step",
+      "timestamp": "2025-10-12T08:53:31.058Z"
+    },
+    {
+      "id": "1760220151007",
+      "text": "JavaScript JavaScript (JS) is a lightweight interpreted (or just-in-time compiled) programming language with first-class functions. While it is most well-known as the scripting language for Web pages, many non-browser environments also use it, such as Node.js, Apache CouchDB and Adobe Acrobat. JavaScript is a prototype-based, garbage-collected, dynamic language, supporting multiple paradigms such as imperative, functional, and object-oriented.  JavaScript's dynamic capabilities include runtime object construction, variable parameter lists, function variables, dynamic script creation (via eval), object introspection (via for...in and Object utilities), and source-code recovery (JavaScript functions store their source text and can be retrieved through toString()).",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+      "title": "JavaScript | MDN",
+      "timestamp": "2025-10-11T22:02:30.973Z"
+    },
+    {
+      "id": "1760176910944",
+      "text": "Introduction Pollution, a modern-day dilemma, has emerged as a grave concern due to its adverse impacts on the environment and human health. It manifests in various forms, including air, water, soil, and noise pollution, posing significant challenges to sustainable development and ecosystem integrity.",
+      "url": "https://www.bing.com/search?qs=LS&pq=essa&sk=CSYN1UAS4AS5LS7&sc=22-4&pglt=299&q=essay+on+pollution&cvid=640b50e6f1424dd99989984583f39bd2&gs_lcrp=EgRlZGdlKgYIAxAAGEAyBggAEEUYOTIGCAEQABhAMgYIAhAAGEAyBggDEAAYQDIGCAQQLhhAMgYIBRAAGEAyBggGEAAYQDIGCAcQABhAMgYICBBFGDzSAQgzNzY3ajBqMagCALACAA&FORM=ANNTA1&PC=HCTS",
+      "title": "essay on pollution - Search",
+      "timestamp": "2025-10-11T10:01:50.920Z"
+    }
+  ]
+}
