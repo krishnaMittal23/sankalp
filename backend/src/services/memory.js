@@ -1,5 +1,6 @@
 // services/memory.js
-import { PrismaClient } from "@prisma/client";
+import pkg from '@prisma/client';
+const { PrismaClient } = pkg;
 import { createEmbedding } from "./embeddings.js";
 import { storeInQdrant, searchQdrant } from "./qdrant.js";
 
