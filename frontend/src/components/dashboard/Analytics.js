@@ -30,88 +30,63 @@ export default function Analytics() {
   const [data, setData] = useState([]);
   const [weeklyData, setWeeklyData] = useState([]);
   const [topicData, setTopicData] = useState([]);
-
-  // useEffect(() => {
-  //   if (!uniquePresence) return;
-
-  //   fetch("/api/getScores", {
-  //     headers: {
-  //       Authorization: `Bearer ${uniquePresence}`,
-  //     },
-  //   })
-  //     .then((res) => res.json())
-  //     .then((tests) => {
-  //       // Sort by date
-  //       // console.log(tests);
-  //       const sorted = tests.data.sort(
-  //         (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-  //       );
-  //       setData(sorted);
-
-  //       // Weekly frequency
-  //       const weekly = {};
-  //       sorted.forEach((test) => {
-  //         const week = format(startOfWeek(parseISO(test.createdAt)), "MMM d");
-  //         weekly[week] = (weekly[week] || 0) + 1;
-  //       });
-  //       setWeeklyData(
-  //         Object.entries(weekly).map(([week, count]) => ({ week, count }))
-  //       );
-
-  //       // Topic distribution
-  //       const topicMap = {};
-  //       sorted.forEach((t) => {
-  //         topicMap[t.topic] = (topicMap[t.topic] || 0) + 1;
-  //       });
-  //       setTopicData(
-  //         Object.entries(topicMap).map(([topic, value]) => ({ topic, value }))
-  //       );
-  //     });
-  // }, [uniquePresence]);
-
   useEffect(() => {
-  if (!uniquePresence) return;
+    if (!uniquePresence) return;
 
-  fetch("/api/getScores", {
-    headers: {
-      Authorization: `Bearer ${uniquePresence}`,
-    },
-  })
-    .then((res) => res.json())
-    .then((tests) => {
-      const sorted = tests.data.sort(
-        (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-      );
-      setData(sorted);
-      const weekly = {};
-      sorted.forEach((test) => {
-        const week = format(startOfWeek(parseISO(test.createdAt)), "MMM d");
-        weekly[week] = (weekly[week] || 0) + 1;
-      });
-      setWeeklyData(
-        Object.entries(weekly).map(([week, count]) => ({ week, count }))
-      );
-      console.log(sorted)
-      const tagMap = {};
-      sorted.forEach((t) => {
-        if(t.tags && Array.isArray(t.tags)) {
-          console.log(t.tags)
-          t.tags.forEach((tag) => {
-            tagMap[tag] = (tagMap[tag] || 0) + 1;
-          });
-        }
-      });
-      setTopicData(
-        Object.entries(tagMap).map(([tag, value]) => ({ topic: tag, value }))
-      );
-    });
-}, [uniquePresence]);
+    const fetchScores = async () => {
+      try {
+        const res = await fetch("/api/getScores", {
+          headers: {
+            Authorization: `Bearer ${uniquePresence}`,
+          },
+        });
+
+        const payload = await res.json();
+        const rows = Array.isArray(payload?.data) ? payload.data : [];
+
+        const sorted = rows.sort(
+          (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+        );
+        setData(sorted);
+
+        const weekly = {};
+        sorted.forEach((test) => {
+          if (!test?.createdAt) return;
+          const week = format(startOfWeek(parseISO(test.createdAt)), "MMM d");
+          weekly[week] = (weekly[week] || 0) + 1;
+        });
+
+        setWeeklyData(
+          Object.entries(weekly).map(([week, count]) => ({ week, count }))
+        );
+
+        const tagMap = {};
+        sorted.forEach((t) => {
+          if (t.tags && Array.isArray(t.tags)) {
+            t.tags.forEach((tag) => {
+              tagMap[tag] = (tagMap[tag] || 0) + 1;
+            });
+          }
+        });
+
+        setTopicData(
+          Object.entries(tagMap).map(([tag, value]) => ({ topic: tag, value }))
+        );
+      } catch (error) {
+        console.error("Failed to load analytics:", error);
+        setData([]);
+        setWeeklyData([]);
+        setTopicData([]);
+      }
+    };
+
+    fetchScores();
+  }, [uniquePresence]);
 
   const COLORS = ["#22c55e", "#3b82f6", "#f97316", "#ef4444", "#a855f7"];
-
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
-      <Card className="lg:col-span-2">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+     {data.length > 0 && <Card className="lg:col-span-2 mt-6">
         <CardHeader>
           <CardTitle>Performance Trend</CardTitle>
         </CardHeader>
@@ -139,8 +114,8 @@ export default function Analytics() {
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
-      </Card>
-      <Card>
+      </Card>}
+      {weeklyData.length > 0 && <Card>
         <CardHeader>
           <CardTitle>Weekly Test Frequency</CardTitle>
         </CardHeader>
@@ -155,8 +130,8 @@ export default function Analytics() {
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
-      </Card>
-      <Card className="lg:col-span-1">
+      </Card>}
+      {topicData.length > 0 && <Card className="lg:col-span-1 mb-6">
         <CardHeader>
           <CardTitle>Topic Distribution</CardTitle>
         </CardHeader>
@@ -180,7 +155,7 @@ export default function Analytics() {
             </PieChart>
           </ResponsiveContainer>
         </CardContent>
-      </Card>
+      </Card>}
     </div>
   );
 }

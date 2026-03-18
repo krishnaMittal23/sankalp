@@ -128,7 +128,7 @@ export default function ChatbotUI() {
         onClick={() => setIsOpen(!isOpen)}
         className={`fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-lg transition-all duration-300
           ${isOpen ? "bg-red-500 hover:bg-red-600" : "bg-gradient-to-br from-blue-500 to-indigo-600 hover:scale-110"}
-          text-white flex items-center justify-center`}
+          text-white flex items-center justify-center cursor-pointer`}
       >
         {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
       </button>
@@ -146,12 +146,12 @@ export default function ChatbotUI() {
             <div className="flex items-center gap-2">
               <button 
                 onClick={clearChat} 
-                className="text-xs px-2 py-1 hover:bg-white/20 rounded"
+                className="text-xs px-2 py-1 hover:bg-white/20 rounded cursor-pointer"
                 title="Clear chat"
               >
                 Clear
               </button>
-              <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-white/20 rounded-full">
+              <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-white/20 rounded-full cursor-pointer">
                 <X size={18} />
               </button>
             </div>
@@ -195,7 +195,7 @@ export default function ChatbotUI() {
               type="button"
               onClick={handleSend}
               className={`p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center justify-center ${
-                isLoading ? "opacity-50 cursor-not-allowed" : ""
+                isLoading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
               }`}
               disabled={isLoading}
             >
