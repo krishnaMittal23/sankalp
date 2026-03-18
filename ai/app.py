@@ -7,7 +7,6 @@ Works with Next.js frontend and Express backend
 from flask import Flask, render_template, Response, jsonify, request
 import cv2
 import numpy as np
-import speech_recognition as sr
 from nltk.sentiment import SentimentIntensityAnalyzer
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from scipy.special import softmax
@@ -17,11 +16,7 @@ import json
 from datetime import datetime
 import threading
 import queue
-import base64
 from flask_cors import CORS
-import librosa
-import io
-import random
 
 # Download required NLTK data
 try:
@@ -104,12 +99,12 @@ class InterviewSession:
     
     def get_average_body_score(self):
         if not self.body_language_scores:
-            return random.randint(47,67)  # Default neutral score
+            return 50.0
         return float(np.mean(self.body_language_scores))
     
     def get_average_voice_score(self):
         if not self.voice_tone_scores:
-            return random.randint(47,67) 
+            return 50.0
         return float(np.mean(self.voice_tone_scores))
     
     def calculate_combined_score(self):
@@ -178,7 +173,7 @@ class VideoCamera:
     def get_average_confidence(self):
         """Get smoothed confidence score (0-100)"""
         if not self.last_predictions:
-            return random.randint(47,67) 
+            return 50.0
         return float(max(0, min(100, np.mean(self.last_predictions))))
     
     def get_frame(self):
@@ -351,7 +346,7 @@ def analyze_question_response():
     voice_score = voice_analysis['voice_tone_score']
     
     # Body language score
-    body_score = random.randint(46,60)  # Default
+    body_score = 50.0  # Default
     if session_id in active_sessions:
         session = active_sessions[session_id]
         body_score = float(session.get_average_body_score())

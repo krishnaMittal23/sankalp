@@ -67,7 +67,7 @@ import interviewsRouter from "./routes/interviews.js";
 // --- Configuration and Initialization ---
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, "./.env") });
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -82,13 +82,13 @@ app.use(express.json({ limit: "50mb" }));
 
 // --- Gemini AI Setup ---
 const apiKey = process.env.GEMINI_API_KEY;
+let model = null;
 if (!apiKey) {
-    console.error('❌ API Key not found. Please set GEMINI_API_KEY in your .env file.');
-    console.error('Get your API key from: https://makersuite.google.com/app/apikey');
-    process.exit(1);
+    console.warn('⚠️ GEMINI_API_KEY not found. /api/query will return 503 until it is configured.');
+} else {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 }
-const genAI = new GoogleGenerativeAI(apiKey);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 // --- File System Functions (Smart Text Saver logic) ---
 const DATA_FILE = path.join(__dirname, 'saved_texts.json');
@@ -178,6 +178,12 @@ app.get('/api/texts', async (req, res) => {
 
 app.post('/api/query', async (req, res) => {
     try {
+        if (!model) {
+            return res.status(503).json({
+                error: 'Gemini service is not configured',
+                message: 'Set GEMINI_API_KEY in backend/.env and restart the server'
+            });
+        }
         const { query } = req.body;
         if (!query) {
             return res.status(400).json({ error: 'Query is required' });
@@ -249,8 +255,13 @@ async function startServer() {
         // Initialize all external services
         await initDataFile();
         console.log("🔄 Initializing Qdrant...");
-        await initQdrant();
-        console.log("✅ Qdrant initialized successfully");
+        try {
+            await initQdrant();
+            console.log("✅ Qdrant initialized successfully");
+        } catch (error) {
+            console.warn("⚠️ Qdrant initialization failed. Continuing without vector features.");
+            console.warn(`⚠️ Qdrant error: ${error.message}`);
+        }
 
         const server = app.listen(PORT, () => {
             console.log(`✅ Server running on http://localhost:${PORT}`);

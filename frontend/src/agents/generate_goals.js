@@ -10,7 +10,7 @@ const llmClient = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY,
 });
 
-async function callLLM(messages, model = "tngtech/deepseek-r1t2-chimera:free") {
+async function callLLM(messages, model = "openrouter/healer-alpha") {
   try {
     const completion = await llmClient.chat.completions.create({
       model,
@@ -27,8 +27,10 @@ async function callLLM(messages, model = "tngtech/deepseek-r1t2-chimera:free") {
           .filter(c => c.type === "text")
           .map(c => c.text)
           .join("\n");
-      } else if (firstMessage.content.text) {
-        textContent = firstMessage.content.text;
+      } else {
+        textContent = typeof firstMessage.content === 'string'
+          ? firstMessage.content
+          : firstMessage.content.text || "";
       }
     }
     if (!textContent || textContent.trim() === "") {
@@ -181,7 +183,12 @@ async function performWebSearch(state) {
   for (const query of searchQueries.slice(0, 2)) {
     try {
       const res = await webSearchTool.invoke({ query });
-      results.push(...res);
+      const items = Array.isArray(res)
+        ? res
+        : typeof res === "string"
+          ? JSON.parse(res)
+          : [res];
+      results.push(...items);
     } catch (err) {
       console.warn("Search error", err);
     }
@@ -195,8 +202,8 @@ async function analyzeContent(state) {
     ? `\n\nWeb context:\n${searchResults.map(r => `- ${r.title}: ${r.content}`).join("\n")}`
     : "";
 
-  const systemPrompt = `
-You are an expert career advisor.  
+const systemPrompt = `
+You are an expert career advisor. You **MUST ONLY** respond with a valid, single JSON object. DO NOT include any explanatory text, reasoning, or markdown (e.g., \`\`\`json) outside of the JSON object itself.  
 Given the document text, the user's goals, and optional web search insights, extract:
 - goals (array of strings)
 - skills (array of strings, only explicitly mentioned)

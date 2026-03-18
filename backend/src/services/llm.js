@@ -21,36 +21,36 @@ function cleanLLMResponse(resp) {
 
 async function getAnalysisScores(sessionId, transcript, questionId) {
   try {
-    const response = await fetch(`${FLASK_ANALYSIS_URL}/api/analyze/transcript`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId,
-        transcript,
-        questionId
-      })
-    });
+    const [transcriptRes, statusRes] = await Promise.all([
+      fetch(`${FLASK_ANALYSIS_URL}/api/analyze/transcript`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, transcript, questionId })
+      }),
+      fetch(`${FLASK_ANALYSIS_URL}/api/session/status?sessionId=${sessionId}`)
+    ]);
 
-    if (!response.ok) {
+    if (!transcriptRes.ok) {
       console.warn("⚠️ Flask analysis unavailable, using defaults");
-      return {
-        voiceToneScore: 50,
-        bodyLanguageScore: 50
-      };
+      return { voiceToneScore: 50, bodyLanguageScore: 50 };
     }
 
-    const data = await response.json();
+    const transcriptData = await transcriptRes.json();
+    let bodyLanguageScore = 50;
+
+    if (statusRes.ok) {
+      const statusData = await statusRes.json();
+      bodyLanguageScore = statusData.results?.body_language_score || 50;
+    }
+
     return {
-      voiceToneScore: data.voiceAnalysis?.voice_tone_score || 50,
-      bodyLanguageScore: 50,
-      voiceAnalysis: data.voiceAnalysis
+      voiceToneScore: transcriptData.voiceAnalysis?.voice_tone_score || 50,
+      bodyLanguageScore,
+      voiceAnalysis: transcriptData.voiceAnalysis
     };
   } catch (error) {
     console.error("❌ Error fetching analysis scores:", error.message);
-    return {
-      voiceToneScore: 50,
-      bodyLanguageScore: 50
-    };
+    return { voiceToneScore: 50, bodyLanguageScore: 50 };
   }
 }
 
@@ -151,22 +151,32 @@ export async function generateQuestions({ role, skills, context = null }) {
   if (data.error) throw new Error(`OpenRouter Error: ${data.error.message}`);
 
   const content = cleanLLMResponse(data.choices[0].message.content);
-  return JSON.parse(content);
+  try {
+    return JSON.parse(content);
+  } catch (e) {
+    console.error("❌ Failed to parse LLM question response:", content);
+    throw new Error("LLM returned invalid JSON for questions. Please try again.");
+  }
 }
 
 export async function evaluateAnswer(transcript, question, sessionId = null, questionId = null) {
-  const prompt = `Evaluate the candidate's answer to this question:
-"${question}"
-Transcript: "${transcript}"
+  const isBlankAnswer = !transcript || transcript.trim().split(/\s+/).length < 3;
 
-Provide a comprehensive evaluation focusing on:
+  const prompt = `You are an interview evaluator. Evaluate the candidate's answer to this interview question.
+
+Question: "${question}"
+Candidate's Answer: "${transcript}"
+
+${isBlankAnswer ? 'Note: The candidate provided a very short or unclear answer. Score accordingly (low score) but still return valid JSON.' : ''}
+
+Evaluate based on:
 1. Content quality and relevance
 2. Technical accuracy (if applicable)
 3. Communication clarity
 4. Completeness of answer
 
-Return ONLY valid JSON:
-{ "score": number (0-100), "notes": string, "strengths": string, "improvements": string }`;
+You MUST respond with ONLY a valid JSON object. Do not include any explanation outside the JSON.
+Format: { "score": <number 0-100>, "notes": <string>, "strengths": <string>, "improvements": <string> }`;
 
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
@@ -179,8 +189,10 @@ Return ONLY valid JSON:
     body: JSON.stringify({
       model: "openai/gpt-4o",
       messages: [
+        { role: "system", content: "You are an interview evaluator. Always respond with valid JSON only. Never refuse to evaluate - if the answer is blank or irrelevant, give a low score and explain in the JSON fields." },
         { role: "user", content: prompt }
       ],
+      response_format: { type: "json_object" },
       max_tokens: 2000
     })
   });
@@ -194,7 +206,19 @@ Return ONLY valid JSON:
   const content = cleanLLMResponse(data.choices[0].message.content);
   console.log("🧾 Evaluation Response:", content);
 
-  const evaluation = JSON.parse(content);
+  let evaluation;
+  try {
+    evaluation = JSON.parse(content);
+  } catch (e) {
+    console.error("❌ Failed to parse LLM evaluation response:", content);
+    // Fallback: return a default low-score evaluation instead of crashing
+    evaluation = {
+      score: 10,
+      notes: "The candidate's answer was unclear or could not be evaluated.",
+      strengths: "None identified.",
+      improvements: "Please provide a clear and relevant answer to the question."
+    };
+  }
 
   let analysisScores = { voiceToneScore: 50, bodyLanguageScore: 50 };
   if (sessionId) {

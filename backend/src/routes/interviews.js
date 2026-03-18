@@ -334,8 +334,8 @@
 
 
 import express from "express";
-import pkg from '@prisma/client';
-const { PrismaClient } = pkg;import { generateQuestions, startAnalysisSession } from "../services/llm.js";
+import { PrismaClient } from "@prisma/client";
+import { generateQuestions, startAnalysisSession } from "../services/llm.js";
 import { transcribeAudio } from "../services/deepgram.js";
 import { synthesizeSpeech } from "../services/elevenlabs.js";
 import { enqueueEvaluation } from "../services/worker.js";
@@ -583,7 +583,6 @@ router.get("/:id/analysis-status", async (req, res) => {
     const data = await response.json();
     res.json(data);
   } catch (error) {
-    console.error("Error fetching analysis status:", error);
     res.json({ active: false });
   }
 });
