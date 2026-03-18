@@ -1,11 +1,10 @@
-// mongowork/saveScores.js
 import clientPromise from "@/lib/mongodb.js";
 
 export async function saveScores({ topic, tags, score, total, uniquePresence, user }) {
   try {
     const client = await clientPromise;
     const db = client.db("AI_Interview");
-    const collection = db.collection("Scores"); // ✅ New collection
+    const collection = db.collection("Scores");
     console.log(tags);
     
     const data = {

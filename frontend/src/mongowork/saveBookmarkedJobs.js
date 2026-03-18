@@ -1,4 +1,4 @@
-// mongowork/saveBookmarkedJobs.js
+
 import clientPromise from "@/lib/mongodb.js";
 
 export async function saveBookmarkedJob({ jobId, title, company, link, uniquePresence, user }) {
@@ -19,7 +19,7 @@ export async function saveBookmarkedJob({ jobId, title, company, link, uniquePre
       createdAt: new Date(),
     };
 
-    // ✅ Prevent duplicate bookmarks by same user + jobId
+  
     const existing = await collection.findOne({ userId: user.id, jobId });
     if (existing) {
       return { success: false, message: "Job already bookmarked" };

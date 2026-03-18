@@ -1,5 +1,8 @@
+"use client";
+
 import React from "react";
 import { Check, X } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 const comparisons = [
   {
@@ -54,6 +57,10 @@ const platforms = [
 ];
 
 const Comparison = () => {
+  const { t } = useLanguage();
+  const comparisonLabels = t("comparison.comparisons", []);
+  const usValues = t("comparison.usValues", []);
+
   const renderCell = (value) => {
     if (value === true) {
       return <Check className="h-5 w-5 text-green-500 mx-auto" />;
@@ -70,10 +77,10 @@ const Comparison = () => {
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
           <h2 className="text-4xl md:text-5xl font-bold">
-            Why Choose <span className="text-primary">Career AI</span>?
+            {t("comparison.headingPrefix")} <span className="text-primary">{t("comparison.headingHighlight")}</span>?
           </h2>
           <p className="text-xl text-muted-foreground">
-            See how we compare to other platforms in the market
+            {t("comparison.subtitle")}
           </p>
         </div>
 
@@ -84,7 +91,7 @@ const Comparison = () => {
               <thead>
                 <tr className="border-b border-border">
                   <th className="text-left p-4 text-muted-foreground font-medium">
-                    Feature
+                    {t("comparison.featureCol")}
                   </th>
                   {platforms.map((platform) => (
                     <th
@@ -108,7 +115,7 @@ const Comparison = () => {
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
                     <td className="p-4 text-foreground/90">
-                      {comparison.feature}
+                      {comparisonLabels[index] || comparison.feature}
                     </td>
                     <td className="p-4 text-center">
                       {renderCell(comparison.leetcode)}
@@ -120,7 +127,7 @@ const Comparison = () => {
                       {renderCell(comparison.glassdoor)}
                     </td>
                     <td className="p-4 text-center bg-primary/5">
-                      {renderCell(comparison.us)}
+                      {renderCell(usValues[index] ?? comparison.us)}
                     </td>
                   </tr>
                 ))}
@@ -136,19 +143,19 @@ const Comparison = () => {
             style={{ animationDelay: "0.6s" }}
           >
             <div className="text-2xl font-bold text-primary">
-              Unified Platform
+              {t("comparison.benefit1Title")}
             </div>
             <p className="text-sm text-muted-foreground">
-              Everything in one place - no more jumping between tools
+              {t("comparison.benefit1Text")}
             </p>
           </div>
           <div
             className="text-center space-y-2 animate-fade-in"
             style={{ animationDelay: "0.7s" }}
           >
-            <div className="text-2xl font-bold text-primary">Personalized AI</div>
+            <div className="text-2xl font-bold text-primary">{t("comparison.benefit2Title")}</div>
             <p className="text-sm text-muted-foreground">
-              Tailored roadmap and feedback just for you
+              {t("comparison.benefit2Text")}
             </p>
           </div>
           <div
@@ -156,10 +163,10 @@ const Comparison = () => {
             style={{ animationDelay: "0.8s" }}
           >
             <div className="text-2xl font-bold text-primary">
-              Real-Time Improvement
+              {t("comparison.benefit3Title")}
             </div>
             <p className="text-sm text-muted-foreground">
-              Instant AI feedback to boost your performance
+              {t("comparison.benefit3Text")}
             </p>
           </div>
         </div>

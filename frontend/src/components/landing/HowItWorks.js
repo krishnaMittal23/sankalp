@@ -1,5 +1,8 @@
+"use client";
+
 import { Card } from "@/components/ui/card";
 import { UserPlus, Brain, Rocket, Trophy } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 const steps = [
   {
@@ -29,16 +32,19 @@ const steps = [
 ];
 
 const HowItWorks = () => {
+  const { t } = useLanguage();
+  const stepsContent = t("howItWorks.steps", []);
+
   return (
     <section id="how-it-works" className="py-24 bg-gradient-to-b from-background to-muted/20">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
           <h2 className="text-4xl md:text-5xl font-bold">
-            How <span className="text-primary">Career AI</span> Works
+            {t("howItWorks.headingPrefix")} <span className="text-primary">{t("howItWorks.headingHighlight")}</span> {t("howItWorks.headingSuffix")}
           </h2>
           <p className="text-xl text-muted-foreground">
-            From scattered preparation to unified success - your journey in four simple steps
+            {t("howItWorks.subtitle")}
           </p>
         </div>
 
@@ -67,9 +73,9 @@ const HowItWorks = () => {
                 </div>
 
                 {/* Content */}
-                <h3 className="text-xl font-semibold mb-3">{step.title}</h3>
+                <h3 className="text-xl font-semibold mb-3">{stepsContent[index]?.title || step.title}</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  {step.description}
+                  {stepsContent[index]?.description || step.description}
                 </p>
               </Card>
             </div>

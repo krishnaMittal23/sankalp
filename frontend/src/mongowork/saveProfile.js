@@ -19,10 +19,8 @@ export async function saveProfile({
     const db = client.db("AI_Interview");
     const collection = db.collection("Profiles");
 
-    // Check if a profile with the unique key already exists
     const existing = await collection.findOne({ uniquePresence });
-    
-    // FIX 1: Use console.log for server-side logging instead of alert
+
     console.log("Checking for existing profile:", existing);
 
     const profileData = {
@@ -43,24 +41,24 @@ export async function saveProfile({
 
     let result;
     if (existing) {
-      // Profile exists, so we update it.
+  
       console.log("Updating existing profile with uniquePresence:", uniquePresence);
       
-      // FIX 2: Use updateOne with the { upsert: true } option
+     
       const updateResult = await collection.updateOne(
-        { uniquePresence }, // The filter to find the document
-        { $set: profileData }, // The data to update
-        { upsert: true } // The option to insert if no document is found
+        { uniquePresence }, 
+        { $set: profileData }, 
+        { upsert: true } 
       );
       
       console.log("Update result:", updateResult);
       result = { updated: true, matchedCount: updateResult.matchedCount, modifiedCount: updateResult.modifiedCount };
 
     } else {
-      // Profile does not exist, so we insert a new one.
+ 
       console.log("Inserting new profileData:", profileData);
       
-      profileData.createdAt = new Date(); // Set createdAt only for new documents
+      profileData.createdAt = new Date(); 
       const insertResult = await collection.insertOne(profileData);
       
       console.log("Insert result:", insertResult);

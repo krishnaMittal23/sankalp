@@ -47,9 +47,9 @@ export async function getUserSkills(uniquePresence) {
     const client = await clientPromise;
     console.log('uniquePresence:', uniquePresence);
     const db = client.db(process.env.MONGODB_DB_NAME || 'AI_Interview');
-    console.log('Fetching user skills for uniquePresence:', uniquePresence);
+
     const allCollections = await db.listCollections().toArray();
-    console.log('All collections in the database:', allCollections.map(col => col.name));
+
     const goalDoc = await db
       .collection('Goals')
       .findOne({ uniquePresence });

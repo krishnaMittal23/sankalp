@@ -1,9 +1,14 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 // import { Link } from "react-router-dom";
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 const CTA = () => {
+  const { t } = useLanguage();
+
   return (
     <section className="py-24 relative overflow-hidden">
       {/* Background Effects */}
@@ -19,32 +24,32 @@ const CTA = () => {
 
           {/* Heading */}
           <h2 className="text-4xl md:text-5xl font-bold leading-tight">
-            Ready to <span className="text-primary">Transform</span> Your Career?
+            {t("cta.headingPrefix")} <span className="text-primary">{t("cta.headingHighlight")}</span> {t("cta.headingSuffix")}
           </h2>
 
           {/* Description */}
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Join thousands of professionals who are accelerating their career growth with AI-powered guidance. Start your journey today.
+            {t("cta.description")}
           </p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <Link href="/auth">
               <Button variant="hero" size="lg" className="group">
-                Get Started for Free
+                {t("cta.getStarted")}
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
             <a href="#features">
               <Button variant="outline" size="lg">
-                Learn More
+                {t("cta.learnMore")}
               </Button>
             </a>
           </div>
 
           {/* Trust Badge */}
           <p className="text-sm text-muted-foreground pt-4">
-            No credit card required • Free trial available • Cancel anytime
+            {t("cta.trust")}
           </p>
         </div>
       </div>

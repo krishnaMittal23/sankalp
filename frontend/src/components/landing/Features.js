@@ -1,5 +1,8 @@
+"use client";
+
 import { Card } from "@/components/ui/card";
 import { Bot, TrendingUp, Zap, FileCheck, Target, Briefcase } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 const features = [
   {
@@ -41,17 +44,19 @@ const features = [
 ];
 
 const Features = () => {
+  const { t } = useLanguage();
+  const featureItems = t("features.items", []);
+
   return (
     <section id="features" className="py-24 relative">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
           <h2 className="text-4xl md:text-5xl font-bold">
-            Powerful Features for Your{" "}
-            <span className="text-primary">Career Success</span>
+            {t("features.headingPrefix")} <span className="text-primary">{t("features.headingHighlight")}</span>
           </h2>
           <p className="text-xl text-muted-foreground">
-            An integrated platform combining AI-driven interview practice, career guidance, and job opportunities into one seamless experience.
+            {t("features.subtitle")}
           </p>
         </div>
 
@@ -66,9 +71,9 @@ const Features = () => {
               <div className={`${feature.color} mb-4 group-hover:scale-110 transition-transform`}>
                 <feature.icon className="h-12 w-12" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
+              <h3 className="text-xl font-semibold mb-3">{featureItems[index]?.title || feature.title}</h3>
               <p className="text-muted-foreground leading-relaxed">
-                {feature.description}
+                {featureItems[index]?.description || feature.description}
               </p>
             </Card>
           ))}

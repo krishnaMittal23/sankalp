@@ -4,9 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Sparkles } from "lucide-react";
+import LanguageSwitcher from "@/components/common/LanguageSwitcher";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { t } = useLanguage();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b">
@@ -26,29 +29,30 @@ const Navbar = () => {
               href="#features"
               className="text-foreground/80 hover:text-foreground transition-colors"
             >
-              Features
+              {t("navbar.features")}
             </a>
             <a
               href="#how-it-works"
               className="text-foreground/80 hover:text-foreground transition-colors"
             >
-              How It Works
+              {t("navbar.howItWorks")}
             </a>
             <a
               href="#comparison"
               className="text-foreground/80 hover:text-foreground transition-colors"
             >
-              Why Us
+              {t("navbar.whyUs")}
             </a>
           </div>
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center gap-4">
-            <Link href="/auth">
-              <Button variant="ghost">Sign In</Button>
+            <LanguageSwitcher compact />
+            <Link href="/auth/login">
+              <Button variant="ghost">{t("navbar.signIn")}</Button>
             </Link>
-            <Link href="/auth">
-              <Button variant="hero">Get Started</Button>
+            <Link href="/auth/signup">
+              <Button variant="hero">{t("navbar.getStarted")}</Button>
             </Link>
           </div>
 
@@ -73,31 +77,34 @@ const Navbar = () => {
               className="block text-foreground/80 hover:text-foreground transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
-              Features
+              {t("navbar.features")}
             </a>
             <a
               href="#how-it-works"
               className="block text-foreground/80 hover:text-foreground transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
-              How It Works
+              {t("navbar.howItWorks")}
             </a>
             <a
               href="#comparison"
               className="block text-foreground/80 hover:text-foreground transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
-              Why Us
+              {t("navbar.whyUs")}
             </a>
+            <div className="pt-2">
+              <LanguageSwitcher />
+            </div>
             <div className="flex flex-col gap-2 pt-4 border-t border-border">
-              <Link href="/auth">
+              <Link href="/auth/login">
                 <Button variant="ghost" className="w-full">
-                  Sign In
+                  {t("navbar.signIn")}
                 </Button>
               </Link>
-              <Link href="/auth">
+              <Link href="/auth/signup">
                 <Button variant="hero" className="w-full">
-                  Get Started
+                  {t("navbar.getStarted")}
                 </Button>
               </Link>
             </div>
