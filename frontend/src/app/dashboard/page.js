@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { LogOut, Upload, Target, FileText, CheckCircle } from "lucide-react";
+import Link from "next/link";
+import { LogOut, Upload, Target, FileText, CheckCircle, Sparkles } from "lucide-react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Sphere, Float } from "@react-three/drei";
 import DashboardNav from "@/components/layout/Dashboardnav";
@@ -77,64 +78,93 @@ function Background3D() {
 
 export default function DashboardPage() {
   const { t } = useLanguage();
+  const backendApiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
   const [file, setFile] = useState(null);
   const [goals, setGoals] = useState('');
   const [jobDescription, setJobDescription] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processingStep, setProcessingStep] = useState(0);
   const [showUploadSection, setShowUploadSection] = useState(false);
   const [skills, setSkills] = useState([]);
   const [interviews, setInterviews] = useState([]);
   const [quizScores, setQuizScores] = useState([]);
+  const [toast, setToast] = useState(null); // { message, type: 'success'|'error'|'info' }
+
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 5000);
+  };
+
+  const fetchDashboardData = async () => {
+    const uniquePresence = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('uniquePresence='))
+      ?.split('=')[1];
+
+    let profileName = null;
+
+    if (uniquePresence) {
+      // Fetch profile for skills (and get userName for interview filtering)
+      try {
+        const res = await fetch('/api/getProfile', {
+          headers: { 'Authorization': `Bearer ${uniquePresence}` }
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          setSkills(data.data.skills || []);
+          profileName = data.data.name || null;
+        }
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+      }
+
+      // Fetch quiz scores
+      try {
+        const res = await fetch('/api/getScores', {
+          headers: { 'Authorization': `Bearer ${uniquePresence}` }
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          setQuizScores(data.data || []);
+        }
+      } catch (err) {
+        console.error('Error fetching scores:', err);
+      }
+    }
+
+    // Fetch interviews from backend (filtered by userName if available)
+    try {
+      const url = profileName
+        ? `${backendApiBase}/interviews?userName=${encodeURIComponent(profileName)}`
+        : `${backendApiBase}/interviews`;
+      const res = await fetch(url);
+      const data = await res.json();
+      setInterviews(Array.isArray(data) ? data : (data.interviews || []));
+    } catch (err) {
+      console.error('Error fetching interviews:', err);
+    }
+  };
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      const uniquePresence = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('uniquePresence='))
-        ?.split('=')[1];
-
-      // Fetch interviews from backend
-      try {
-        const res = await fetch('http://localhost:3001/interviews');
-        const data = await res.json();
-        setInterviews(Array.isArray(data) ? data : (data.interviews || []));
-      } catch (err) {
-        console.error('Error fetching interviews:', err);
-      }
-
-      if (uniquePresence) {
-        // Fetch profile for skills
-        try {
-          const res = await fetch('/api/getProfile', {
-            headers: { 'Authorization': `Bearer ${uniquePresence}` }
-          });
-          const data = await res.json();
-          if (data.status === 'success') {
-            setSkills(data.data.skills || []);
-          }
-        } catch (err) {
-          console.error('Error fetching profile:', err);
-        }
-
-        // Fetch quiz scores
-        try {
-          const res = await fetch('/api/getScores', {
-            headers: { 'Authorization': `Bearer ${uniquePresence}` }
-          });
-          const data = await res.json();
-          if (data.status === 'success') {
-            setQuizScores(data.data || []);
-          }
-        } catch (err) {
-          console.error('Error fetching scores:', err);
-        }
-      }
-    };
-
     fetchDashboardData();
   }, []);
 
-  const completedInterviews = interviews.filter(i => i.reports && i.reports.length > 0).length;
+  useEffect(() => {
+    if (!isProcessing) { setProcessingStep(0); return; }
+    const interval = setInterval(() => {
+      setProcessingStep(prev => (prev < 3 ? prev + 1 : prev));
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [isProcessing]);
+
+  const processingSteps = [
+    { label: t("dashboardHome.processingStepExtract") || "Extracting document data", icon: "📄" },
+    { label: t("dashboardHome.processingStepAnalyze") || "Analyzing content with AI", icon: "🧠" },
+    { label: t("dashboardHome.processingStepMatch") || "Matching skills & goals", icon: "🎯" },
+    { label: t("dashboardHome.processingStepFinalize") || "Finalizing results", icon: "✨" },
+  ];
+
+  const completedInterviews= interviews.filter(i => i.reports && i.reports.length > 0).length;
   const avgQuizScore = quizScores.length > 0
     ? Math.round(quizScores.reduce((sum, s) => sum + (s.percentage || 0), 0) / quizScores.length)
     : 0;
@@ -213,7 +243,7 @@ export default function DashboardPage() {
       if (validTypes.includes(selectedFile.type)) {
         setFile(selectedFile);
       } else {
-        alert(t("dashboardHome.alertUploadType"));
+        showToast(t("dashboardHome.alertUploadType"), 'error');
         e.target.value = '';
       }
     }
@@ -221,7 +251,7 @@ export default function DashboardPage() {
 
   const handleProcess = async () => {
     if (!file && !goals.trim()) {
-      alert(t("dashboardHome.alertDocOrGoals"));
+      showToast(t("dashboardHome.alertDocOrGoals"), 'error');
       return;
     }
 
@@ -254,7 +284,7 @@ export default function DashboardPage() {
           
         } catch (error) {
           console.error('Error extracting text:', error);
-          alert(t("dashboardHome.alertProcessingDocument"));
+          showToast(t("dashboardHome.alertProcessingDocument"), 'error');
           setIsProcessing(false);
           return;
         }
@@ -309,18 +339,18 @@ export default function DashboardPage() {
         const data = await processingResult.value.json();
         if (!processingResult.value.ok) {
           if (processingResult.value.status === 401) {
-            alert(`${t("dashboardHome.alertAuthFailed")}: ` + (data.error || t("dashboardHome.unauthorized")));
+            showToast(`${t("dashboardHome.alertAuthFailed")}: ` + (data.error || t("dashboardHome.unauthorized")), 'error');
           } else if (processingResult.value.status === 429) {
-            alert(`${t("dashboardHome.alertRateLimit")} ${data.retryAfter || t("dashboardHome.aWhile")} ${t("dashboardHome.seconds")}.`);
+            showToast(`${t("dashboardHome.alertRateLimit")} ${data.retryAfter || t("dashboardHome.aWhile")} ${t("dashboardHome.seconds")}.`, 'error');
           } else {
-            alert(`${t("dashboardHome.alertProcessingError")}: ${data.error || t("dashboardHome.somethingWrong")}`);
+            showToast(`${t("dashboardHome.alertProcessingError")}: ${data.error || t("dashboardHome.somethingWrong")}`, 'error');
           }
         } else {
           console.log('Processing API Response:', data);
         }
       } else {
         console.error('Processing API failed:', processingResult.reason);
-        alert(t("dashboardHome.alertApiFailed"));
+        showToast(t("dashboardHome.alertApiFailed"), 'error');
       }
 
       if (results.length > 1) {
@@ -329,28 +359,30 @@ export default function DashboardPage() {
           const atsData = await atsResult.value.json();
           if (!atsResult.value.ok) {
             console.error('ATS Check Error:', atsData);
-            alert(`${t("dashboardHome.alertAtsError")}: ${atsData.error || t("dashboardHome.somethingWrong")}`);
+            showToast(`${t("dashboardHome.alertAtsError")}: ${atsData.error || t("dashboardHome.somethingWrong")}`, 'error');
           } else {
             console.log('ATS Check Response:', atsData);
-            alert(`${t("dashboardHome.alertSuccessAts")} ${atsData.data.atsAnalysis.matchScore}%`);
+            showToast(`${t("dashboardHome.alertSuccessAts")} ${atsData.data.atsAnalysis.matchScore}%`, 'success');
           }
         } else {
           console.error('ATS Check failed:', atsResult.reason);
-          alert(t("dashboardHome.alertAtsFailedSaved"));
+          showToast(t("dashboardHome.alertAtsFailedSaved"), 'error');
         }
       }
 
       if (results[0].status === 'fulfilled') {
-        alert(t("dashboardHome.alertProcessingCompleted"));
+        showToast(t("dashboardHome.alertProcessingCompleted"), 'success');
         setFile(null);
         setGoals('');
         setJobDescription('');
         setShowUploadSection(false);
+        // Re-fetch profile data to reflect newly parsed skills/goals
+        fetchDashboardData();
       }
 
     } catch (error) {
       console.error('Error calling API:', error);
-      alert(t("dashboardHome.alertRequestError"));
+      showToast(t("dashboardHome.alertRequestError"), 'error');
     } finally {
       setIsProcessing(false);
     }
@@ -371,7 +403,28 @@ export default function DashboardPage() {
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
       <Background3D />
-      <ChatbotButton /> 
+      <ChatbotButton />
+
+      {/* Toast notification */}
+      {toast && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <div className={`pointer-events-auto flex items-center gap-3 px-6 py-5 rounded-2xl shadow-2xl backdrop-blur-md border max-w-md animate-fade-in-up ${
+            toast.type === 'success'
+              ? 'bg-green-950/80 border-green-500/40 text-green-200'
+              : toast.type === 'error'
+                ? 'bg-red-950/80 border-red-500/40 text-red-200'
+                : 'bg-slate-900/80 border-primary/40 text-blue-200'
+          }`}>
+            <span className="text-lg">
+              {toast.type === 'success' ? '✅' : toast.type === 'error' ? '❌' : 'ℹ️'}
+            </span>
+            <p className="text-sm font-medium">{toast.message}</p>
+            <button onClick={() => setToast(null)} className="ml-auto text-slate-400 hover:text-white transition-colors">
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
       
       <div className="relative z-10 container mx-auto px-4 py-8 space-y-8">
         <DashboardNav />
@@ -425,10 +478,78 @@ export default function DashboardPage() {
         <Analytics />
 
         <div 
-  className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-8 shadow-2xl"
+  className="relative bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-8 shadow-2xl overflow-hidden"
   onMouseEnter={() => setShowUploadSection(true)}
-  onMouseLeave={() => setShowUploadSection(false)}
+  onMouseLeave={() => { if (!isProcessing) setShowUploadSection(false); }}
 >
+  {/* Processing overlay */}
+  {isProcessing && (
+    <div className="absolute inset-0 z-20 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center gap-8 animate-fade-in-up rounded-2xl">
+      {/* Orbiting dots around a central icon */}
+      <div className="relative w-24 h-24 flex items-center justify-center">
+        <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-pulse-ring" />
+        <div className="absolute inset-[-8px] rounded-full border border-dashed border-primary/30 animate-spin" style={{ animationDuration: '6s' }} />
+        <div className="absolute w-3 h-3 rounded-full bg-blue-400 shadow-lg shadow-blue-400/50 animate-orbit" />
+        <div className="absolute w-2 h-2 rounded-full bg-cyan-400 shadow-lg shadow-cyan-400/50 animate-orbit-reverse" />
+        <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-cyan-500 flex items-center justify-center shadow-xl shadow-primary/30">
+          <Sparkles className="w-7 h-7 text-white animate-pulse" />
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="w-64 space-y-3">
+        <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-primary via-cyan-400 to-primary transition-all duration-700 ease-out relative"
+            style={{ width: `${((processingStep + 1) / processingSteps.length) * 100}%` }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+          </div>
+        </div>
+        <p className="text-xs text-slate-500 text-center">
+          {processingStep + 1} / {processingSteps.length}
+        </p>
+      </div>
+
+      {/* Steps */}
+      <div className="flex flex-col gap-3 w-72">
+        {processingSteps.map((step, i) => (
+          <div
+            key={i}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-500 ${
+              i < processingStep
+                ? 'bg-green-500/10 border border-green-500/20'
+                : i === processingStep
+                  ? 'bg-primary/10 border border-primary/30 shadow-lg shadow-primary/10'
+                  : 'bg-slate-800/30 border border-slate-800/50 opacity-40'
+            }`}
+            style={i <= processingStep ? { animationDelay: `${i * 150}ms` } : {}}
+          >
+            <span className="text-lg w-6 text-center">
+              {i < processingStep ? '✓' : step.icon}
+            </span>
+            <span className={`text-sm font-medium ${
+              i < processingStep
+                ? 'text-green-400'
+                : i === processingStep
+                  ? 'text-white'
+                  : 'text-slate-500'
+            }`}>
+              {step.label}
+            </span>
+            {i === processingStep && (
+              <div className="ml-auto flex gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+
   <div className="flex items-center justify-between mb-6">
     <div className="flex items-center gap-3">
       <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center">
@@ -521,24 +642,14 @@ export default function DashboardPage() {
         transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed
         transform hover:scale-[1.02] active:scale-[0.98]"
     >
-      {isProcessing ? (
-        <span className="flex items-center justify-center gap-2">
-          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-          </svg>
-          {t("dashboardHome.processing")}
-        </span>
-      ) : (
-        t("dashboardHome.processDocument")
-      )}
+      {t("dashboardHome.processDocument")}
     </button>
   </div>
 </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, index) => (
-            <a
+            <Link
               key={index}
               href={feature.link}
               className="group relative overflow-hidden rounded-2xl border border-slate-800/50 bg-slate-900/50 backdrop-blur-xl p-8 shadow-lg hover:shadow-primary/20 hover:border-primary/50 transform hover:scale-105 transition-all duration-300 cursor-pointer"
@@ -565,20 +676,8 @@ export default function DashboardPage() {
                   </svg>
                 </div>
               </div>
-            </a>
+            </Link>
           ))}
-        </div>
-
-        <div className="bg-gradient-to-r from-primary to-primary/80 rounded-2xl p-8 text-white shadow-2xl shadow-primary/30">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="space-y-2">
-              <h3 className="text-3xl font-bold">{t("dashboardHome.readyTitle")}</h3>
-              <p className="text-white/90 text-lg">{t("dashboardHome.readySubtitle")}</p>
-            </div>
-            <button className="px-8 py-4 bg-white text-primary font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 whitespace-nowrap cursor-pointer">
-              {t("dashboardHome.completeProfile")}
-            </button>
-          </div>
         </div>
       </div>
     </div>

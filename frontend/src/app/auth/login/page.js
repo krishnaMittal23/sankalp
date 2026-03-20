@@ -10,10 +10,12 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [msg, setMsg] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   async function onSubmit(e) {
     e.preventDefault();
+    setLoading(true);
 
     try {
       const res = await fetch("/api/auth/login", {
@@ -43,6 +45,8 @@ export default function LoginPage() {
       } else {
         setMsg(err?.message || "Signin failed");
       }
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -94,9 +98,10 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full px-4 py-3 rounded-lg bg-gradient-to-r from-primary to-primary/80 text-white font-semibold shadow-lg hover:shadow-primary/25 transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+              disabled={loading}
+              className="w-full px-4 py-3 rounded-lg bg-gradient-to-r from-primary to-primary/80 text-white font-semibold shadow-lg hover:shadow-primary/25 transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-              {t("auth.signIn")}
+              {loading ? "Signing In..." : t("auth.signIn")}
             </button>
 
             {msg && (

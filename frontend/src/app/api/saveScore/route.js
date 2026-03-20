@@ -4,6 +4,7 @@ import { Redis } from "@upstash/redis";
 import { saveScores } from "@/mongowork/saveScores.js";
 import { createClient } from "@supabase/supabase-js";
 import { GoogleGenAI } from "@google/genai";
+import { jsonrepair } from "jsonrepair";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -114,7 +115,7 @@ Topic: "${topic}"
   console.log(text);
   
   try {
-    const parsed = JSON.parse(text);
+    const parsed = JSON.parse(jsonrepair(text));
     if (Array.isArray(parsed)) return parsed.map((t) => t.toLowerCase().trim());
   } catch (err) {
     console.warn("Failed to parse Gemini response, fallback:", err);

@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { 
@@ -26,10 +28,9 @@ export default function DashboardNav() {
     profileImage: null
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [pathname, setPathname] = useState("");
+  const pathname = usePathname();
 
   useEffect(() => {
-    setPathname(window.location.pathname);
     fetchUserData();
   }, []);
 
@@ -122,7 +123,7 @@ export default function DashboardNav() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <a href="/" className="flex items-center gap-3 group">
+          <Link href="/" className="flex items-center gap-3 group">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl blur-md opacity-50 group-hover:opacity-75 transition-opacity"></div>
               <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center shadow-lg">
@@ -134,12 +135,12 @@ export default function DashboardNav() {
             <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent hidden sm:block">
               NextStep
             </span>
-          </a>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-2">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.path}
                 href={link.path}
                 className={`relative px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 group ${
@@ -152,7 +153,7 @@ export default function DashboardNav() {
                   {link.icon}
                 </span>
                 <span>{link.name}</span>
-              </a>
+              </Link>
             ))}
           </div>
 
@@ -185,20 +186,20 @@ export default function DashboardNav() {
                   </div>
                   
                   <div className="py-2">
-                    <a
+                    <Link
                       href="/dashboard/profile"
                       className="flex items-center gap-3 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800/50 hover:text-white transition-colors"
                     >
                       <User className="w-4 h-4" />
                       {t("navbar.myProfile")}
-                    </a>
-                    <a
+                    </Link>
+                    <Link
                       href="/dashboard/settings"
                       className="flex items-center gap-3 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800/50 hover:text-white transition-colors"
                     >
                       <Settings className="w-4 h-4" />
                       {t("navbar.settings")}
-                    </a>
+                    </Link>
                   </div>
 
                   <div className="border-t border-slate-800/50 py-2">
@@ -232,7 +233,7 @@ export default function DashboardNav() {
             </div>
             <div className="space-y-2">
               {navLinks.map((link) => (
-                <a
+                <Link
                   key={link.path}
                   href={link.path}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
@@ -249,7 +250,7 @@ export default function DashboardNav() {
                     <p className="font-medium">{link.name}</p>
                     <p className="text-xs opacity-75">{link.description}</p>
                   </div>
-                </a>
+                </Link>
               ))}
             </div>
 
@@ -268,20 +269,20 @@ export default function DashboardNav() {
               </div>
 
               <div className="space-y-1">
-                <a
+                <Link
                   href="/dashboard/profile"
                   className="flex items-center gap-3 px-4 py-2 text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-colors"
                 >
                   <User className="w-4 h-4" />
                   {t("navbar.myProfile")}
-                </a>
-                <a
+                </Link>
+                <Link
                   href="/dashboard/settings"
                   className="flex items-center gap-3 px-4 py-2 text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-colors"
                 >
                   <Settings className="w-4 h-4" />
                   {t("navbar.settings")}
-                </a>
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-colors w-full"

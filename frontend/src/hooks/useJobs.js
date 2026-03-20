@@ -1,7 +1,7 @@
 "use client";
 
 import useSWR from "swr";
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 const fetcher = (url) => fetch(url).then(r=>r.json());
 
 export function useJobs() {

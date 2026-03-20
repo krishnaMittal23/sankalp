@@ -225,9 +225,88 @@ export async function GET(request) {
 }
 
 
+function detectIntent(message) {
+  const msg = message.toLowerCase().trim();
+
+  // --- Rule-based intent detection (no LLM quota used) ---
+
+  // QUIZ: quiz/test/practice + optional topic
+  const quizMatch = msg.match(
+    /(?:quiz|test|practice|generate.*quiz|take.*quiz|start.*quiz|quiz.*on|quiz.*for|test.*on|test.*for|practice.*on)\s+(?:on\s+|for\s+|about\s+)?([a-z0-9 .#+]+?)(?:\s*$|\s*please|\s*now)/i
+  );
+  if (
+    quizMatch ||
+    /\b(quiz|generate.*quiz|take.*quiz|start.*quiz|test me|practice questions)\b/.test(msg)
+  ) {
+    // Try to extract topic from patterns like "quiz for X", "quiz on X", "generate quiz for X"
+    const topicMatch = msg.match(
+      /(?:quiz|test|practice)\s+(?:for|on|about|in|of)\s+([a-z0-9 .#+]+?)(?:\s*$|\s*please|\s*now)/i
+    ) || msg.match(
+      /(?:generate|create|start|take)\s+(?:a\s+)?(?:quiz|test)\s+(?:for|on|about|in|of)?\s*([a-z0-9 .#+]+?)(?:\s*$|\s*please|\s*now)/i
+    );
+    const topic = topicMatch ? topicMatch[1].trim() : null;
+    return { intent: "QUIZ", topic };
+  }
+
+  // JOB_SEARCH: job/jobs/career + search/find/look/browse/open
+  if (
+    /\b(search\s+jobs?|find\s+jobs?|look\s+for\s+jobs?|browse\s+jobs?|job\s+search|open\s+jobs?|show\s+jobs?|find\s+me\s+a?\s+job|i\s+want\s+(to\s+)?(?:search|find|look\s+for)\s+(?:a\s+)?job)\b/.test(msg)
+  ) {
+    const searchMatch = msg.match(
+      /(?:search|find|look for|browse)\s+(?:for\s+)?(?:a\s+)?([a-z0-9 ]+?)\s+jobs?/i
+    );
+    const search = searchMatch ? searchMatch[1].trim() : null;
+    return { intent: "JOB_SEARCH", search };
+  }
+
+  // RESUME: resume/cv + build/generate/create/make
+  if (
+    /\b(build|generate|create|make|write|update|improve)\s+(?:my\s+)?(?:resume|cv)\b/.test(msg) ||
+    /\b(?:resume|cv)\s+(?:builder|generator|creator)\b/.test(msg)
+  ) {
+    return { intent: "RESUME" };
+  }
+
+  // MOCK_INTERVIEW: mock interview / practice interview / start interview / non-verbal prep
+  if (
+    /\b(mock\s+interview|practice\s+interview|start\s+(a\s+)?interview|take\s+(a\s+)?interview|i\s+want\s+(to\s+)?(do|take|start|practice)\s+(a\s+)?(mock\s+)?interview|non[\s-]?verbal\s+(prep|practice|training|interview)|body\s+language\s+(prep|practice|training)|interview\s+prep|prep\s+(for\s+)?(interview|interviews)|prepare\s+(for\s+)?(an?\s+)?interview)\b/.test(msg)
+  ) {
+    return { intent: "MOCK_INTERVIEW" };
+  }
+
+  // ROADMAP: show/open/generate roadmap or learning path
+  if (
+    /\b(show|open|view|generate|create|get|my|see)\s+(my\s+)?(road\s?map|learning\s+path|career\s+path|study\s+plan)\b/.test(msg) ||
+    /\b(road\s?map|learning\s+path|career\s+path)\b/.test(msg)
+  ) {
+    return { intent: "ROADMAP" };
+  }
+
+  return { intent: "NONE" };
+}
+
 export async function POST(request) {
   try {
     const { message, chatHistory } = await request.json();
+
+    // --- Intent Detection (keyword/regex-based, no LLM quota used) ---
+    const { intent, topic, search } = detectIntent(message);
+
+    if (intent && intent !== "NONE") {
+      const intentMessages = {
+        QUIZ: `Sure! Taking you to the${topic ? ` ${topic}` : ""} quiz now... 🧠`,
+        JOB_SEARCH: `On it! Opening job search${search ? ` for "${search}"` : ""} now... 💼`,
+        RESUME: "Let's build your resume! Redirecting you now... 📄",
+        MOCK_INTERVIEW: "Time to practice! Taking you to mock interview... 🎤",
+        ROADMAP: "Opening your career roadmap now... 🗺️",
+      };
+      return NextResponse.json({
+        intent,
+        params: { topic, search },
+        reply: intentMessages[intent],
+      });
+    }
+
     const { user, uniquePresence } = await authenticateRequest(request);
 
     const client = await clientPromise;
@@ -275,10 +354,6 @@ export async function POST(request) {
       chatHistoryLength: chatHistory?.length || 0,
     });
 
-    // Initialize Gemini client
-    const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
     // Format chat history for context
     const formattedHistory = chatHistory && chatHistory.length > 1
       ? chatHistory
@@ -314,6 +389,10 @@ Your response:
 `;
 
     console.log("🧠 Final Gemini Prompt:\n", prompt);
+
+    // Initialize Gemini client
+    const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     // Generate content using Gemini
     let reply = "⚠️ Sorry, I couldn't generate a response.";

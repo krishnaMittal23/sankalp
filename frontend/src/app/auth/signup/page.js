@@ -12,12 +12,14 @@ export default function SignupPage() {
   const [phone, setPhone] = useState("");
   const [pass, setPass] = useState("");
   const [msg, setMsg] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   async function onSubmit(e) {
     e.preventDefault();
 
     console.log("🚀 Form submitted. Creating account...");
+    setLoading(true);
     setMsg(t("auth.creatingAccount"));
 
     try {
@@ -52,7 +54,7 @@ export default function SignupPage() {
       document.cookie = `uniquePresence=${uniquePresence}; path=/; max-age=31536000; SameSite=Lax`;
       console.log("   🍪 Cookie 'uniquePresence' set.");
 
-      // 3️⃣ Call MongoDB API to create profile
+      // 3️⃣ Call MongoDB API to create profile (non-blocking)
       const profilePayload = {
         name,
         email,
@@ -65,28 +67,26 @@ export default function SignupPage() {
         website: "",
         joinDate: new Date().toLocaleString("default", { month: "long", year: "numeric" })
       };
-      console.log("3️⃣ Calling MongoDB API '/api/saveProfile' with payload:", profilePayload);
-      const profileResponse = await fetch("/api/saveProfile", {
+      console.log("3️⃣ Calling MongoDB API '/api/saveProfile' (non-blocking)");
+      fetch("/api/saveProfile", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${uniquePresence}`,
         },
         body: JSON.stringify(profilePayload),
-      });
-
-      const profileResult = await profileResponse.json();
-      console.log("   MongoDB API response:", { status: profileResponse.status, body: profileResult });
-      if (profileResult.status !== "success") {
-        console.warn("MongoDB profile creation may have failed:", profileResult.message);
-      } else {
-        console.log("   ✅ MongoDB profile creation successful.");
-      }
+      }).then(res => res.json()).then(result => {
+        if (result.status !== "success") {
+          console.warn("MongoDB profile creation may have failed:", result.message);
+        } else {
+          console.log("   ✅ MongoDB profile creation successful.");
+        }
+      }).catch(err => console.warn("MongoDB profile creation error:", err));
 
       // 4️⃣ Success message and redirect
       console.log("✅ All steps completed successfully! Redirecting...");
       setMsg(t("auth.accountCreated"));
-      setTimeout(() => router.push('/dashboard'), 2000);
+      router.push('/dashboard');
 
     } catch (err) {
       console.error("❌ Signup error caught:", err);
@@ -95,6 +95,8 @@ export default function SignupPage() {
       } else {
         setMsg(err.message || "Failed to create account");
       }
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -171,9 +173,10 @@ export default function SignupPage() {
 
             <button 
               type="submit"
-              className="w-full px-4 py-3 rounded-lg bg-gradient-to-r from-primary to-primary/80 text-white font-semibold shadow-lg hover:shadow-primary/25 transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+              disabled={loading}
+              className="w-full px-4 py-3 rounded-lg bg-gradient-to-r from-primary to-primary/80 text-white font-semibold shadow-lg hover:shadow-primary/25 transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-              {t("auth.createAccount")}
+              {loading ? "Creating Account..." : t("auth.createAccount")}
             </button>
 
             {msg && (

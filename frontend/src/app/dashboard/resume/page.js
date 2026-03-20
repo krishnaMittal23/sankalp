@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import Editor from '@monaco-editor/react'
 
 function parseLatex(latex) {
@@ -135,6 +136,7 @@ function ResumePreview({ parsedData }) {
 }
 
 export default function ResumeEditor() {
+  const router = useRouter()
   const [form, setForm] = useState({
     name: '', title: '', email: '', phone: '',
     summary: '', jobs: '', projects: '', skills: ''
@@ -323,7 +325,18 @@ export default function ResumeEditor() {
       </div>
 
       <aside className="w-[340px] p-5 border-r border-zinc-900/80 overflow-auto bg-zinc-950/80 backdrop-blur-xl relative z-10 custom-scrollbar">
-        <h1 className="text-2xl text-zinc-100 mb-5 font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">Resume Editor</h1>
+        <div className="flex items-center gap-3 mb-5">
+          <button
+            onClick={() => router.back()}
+            className="p-2 rounded-lg bg-zinc-800/50 border border-zinc-900/80 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80 hover:border-zinc-700 transition-all duration-300 cursor-pointer"
+            title="Go back"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h1 className="text-2xl text-zinc-100 font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">Resume Editor</h1>
+        </div>
         
         {error && (
           <div className="text-red-400 text-xs p-2.5 bg-red-950/50 rounded-lg mb-3 border border-red-900/50 backdrop-blur-sm animate-slide-down">

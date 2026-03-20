@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { 
   Camera, 
   Mail, 
@@ -30,6 +31,7 @@ export default function ProfilePage() {
    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [fetching, setFetching] = useState(true);
+    const [interviewCount, setInterviewCount] = useState(0);
 
     const getUniquePresence = () => {
     if (typeof window === "undefined") return null;
@@ -103,6 +105,7 @@ export default function ProfilePage() {
 
     
   useEffect(() => {
+    const backendApiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
     const fetchProfile = async () => {
       if (!uniquePresence) return;
       try {
@@ -120,6 +123,19 @@ export default function ProfilePage() {
         if (result.status === "success" && result.data) {
           setProfileData(result.data);
           setTempData(result.data);
+
+          // Fetch user's interview count
+          const userName = result.data.name;
+          if (userName) {
+            try {
+              const intRes = await fetch(`${backendApiBase}/interviews?userName=${encodeURIComponent(userName)}`);
+              const intData = await intRes.json();
+              const interviews = Array.isArray(intData) ? intData : (intData.interviews || []);
+              setInterviewCount(interviews.length);
+            } catch (intErr) {
+              console.error("Error fetching interviews:", intErr);
+            }
+          }
         } else {
           console.warn("No profile found, creating new profile...");
           setProfileData({
@@ -229,7 +245,7 @@ console.log('Saving profile with uniquePresence:', uniquePresence);
 
   const statCards = [
     { label: "Bookmarked", value: profileData.bookmarkedJobs?.length || 0, icon: Bookmark, tone: "indigo" },
-    { label: "Interviews", value: "8", icon: Calendar, tone: "fuchsia" },
+    { label: "Interviews", value: interviewCount, icon: Calendar, tone: "fuchsia" },
     { label: "Skills", value: profileData.skills?.length || 0, icon: Award, tone: "emerald" }
   ];
 
@@ -261,13 +277,13 @@ console.log('Saving profile with uniquePresence:', uniquePresence);
 
       <div className="relative mx-auto max-w-7xl px-4 py-10 space-y-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <a
+          <Link
             href="/dashboard"
             className="inline-flex items-center gap-2 self-start rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 backdrop-blur hover:border-white/20 hover:bg-white/10 transition cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to dashboard
-          </a>
+          </Link>
 
           <div className="flex gap-3">
             {isEditing ? (

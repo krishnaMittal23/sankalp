@@ -731,8 +731,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Camera, Mic, Square, Play, AlertCircle, CheckCircle, Loader, Volume2, VolumeX, Loader2, TrendingUp, Brain, ArrowLeft } from 'lucide-react';
 
-const API_URL = 'http://localhost:3001';
-const FLASK_URL = 'http://127.0.0.1:5001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const FLASK_URL = process.env.NEXT_PUBLIC_AI_URL || 'http://127.0.0.1:5001';
 
 const AIInterviewerVideo = ({ isListening, isSpeaking, videoRef }) => {
   return (
