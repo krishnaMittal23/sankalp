@@ -72,9 +72,29 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+const localOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:3001'
+];
+
+const configuredOrigins = [
+    ...(process.env.CORS_ORIGINS || '').split(','),
+    process.env.FRONTEND_URL || ''
+]
+    .map(origin => origin.trim())
+    .filter(Boolean);
+
+const allowedOrigins = new Set([...localOrigins, ...configuredOrigins]);
+
 // --- Middleware ---
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3001'],
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.has(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));

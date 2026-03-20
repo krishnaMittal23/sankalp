@@ -6,7 +6,7 @@ const llmClient = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY,
 });
 
-async function callLLM(messages, model = "openrouter/healer-alpha") {
+async function callLLM(messages, model = "nvidia/nemotron-3-super-120b-a12b:free") {
   try {
     const completion = await llmClient.chat.completions.create({
       model,

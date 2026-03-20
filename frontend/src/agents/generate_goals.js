@@ -3,6 +3,7 @@ import { JsonOutputParser } from '@langchain/core/output_parsers';
 import { TavilySearch } from "@langchain/tavily";
 import OpenAI from "openai";
 import { parse as parseJsonC } from 'jsonc-parser';
+import { jsonrepair } from 'jsonrepair';
 
 
 const llmClient = new OpenAI({
@@ -10,7 +11,7 @@ const llmClient = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY,
 });
 
-async function callLLM(messages, model = "openrouter/healer-alpha") {
+async function callLLM(messages, model = "nvidia/nemotron-3-super-120b-a12b:free") {
   try {
     const completion = await llmClient.chat.completions.create({
       model,
@@ -166,7 +167,8 @@ Goals: ${cleanedGoals || "None"}
       { role: "system", content: "Generate search queries." },
       { role: "user", content: prompt }
     ]);
-    let queries = JSON.parse(response.content.trim());
+    let raw = response.content.trim();
+    let queries = JSON.parse(jsonrepair(raw));
     if (!Array.isArray(queries)) queries = [];
     return { ...state, searchQueries: queries.slice(0, 3) };
   } catch (err) {

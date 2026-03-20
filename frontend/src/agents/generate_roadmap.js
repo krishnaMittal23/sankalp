@@ -9,7 +9,7 @@ const llmClient = new OpenAI({
 });
 
 
-async function callLLM(messages, model = "openrouter/healer-alpha") {
+async function callLLM(messages, model = "nvidia/nemotron-3-super-120b-a12b:free") {
   try {
     const completion = await llmClient.chat.completions.create({
       model,
@@ -244,7 +244,7 @@ Return ONLY the JSON array, no additional text.
     const response = await callLLM([
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt }
-    ], "openrouter/healer-alpha");
+    ], "nvidia/nemotron-3-super-120b-a12b:free");
 
     let roadmapArray;
     try {

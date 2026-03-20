@@ -1,5 +1,6 @@
 import fetch from "node-fetch";
 import dotenv from "dotenv";
+import { jsonrepair } from "jsonrepair";
 
 // import { createEmbedding, queryNearestVectors } from "./qdrant.js";
 
@@ -7,6 +8,7 @@ dotenv.config();
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const FLASK_ANALYSIS_URL = process.env.FLASK_ANALYSIS_URL || "http://127.0.0.1:5001";
+const OPENROUTER_REFERER = process.env.OPENROUTER_REFERER || process.env.FRONTEND_URL || "http://localhost:3000";
 
 if (!OPENROUTER_API_KEY) {
   console.error("❌ Missing OpenRouter API Key. Check your .env file in /backend");
@@ -136,7 +138,7 @@ export async function generateQuestions({ role, skills, context = null }) {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-      "HTTP-Referer": "http://localhost:3000",
+      "HTTP-Referer": OPENROUTER_REFERER,
       "X-Title": "AI Career Interview Copilot",
       "Content-Type": "application/json"
     },
@@ -152,7 +154,7 @@ export async function generateQuestions({ role, skills, context = null }) {
 
   const content = cleanLLMResponse(data.choices[0].message.content);
   try {
-    return JSON.parse(content);
+    return JSON.parse(jsonrepair(content));
   } catch (e) {
     console.error("❌ Failed to parse LLM question response:", content);
     throw new Error("LLM returned invalid JSON for questions. Please try again.");
@@ -182,7 +184,7 @@ Format: { "score": <number 0-100>, "notes": <string>, "strengths": <string>, "im
     method: "POST",
     headers: {
       "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-      "HTTP-Referer": "http://localhost:3000",
+      "HTTP-Referer": OPENROUTER_REFERER,
       "X-Title": "AI Career Interview Copilot",
       "Content-Type": "application/json"
     },
@@ -208,7 +210,7 @@ Format: { "score": <number 0-100>, "notes": <string>, "strengths": <string>, "im
 
   let evaluation;
   try {
-    evaluation = JSON.parse(content);
+    evaluation = JSON.parse(jsonrepair(content));
   } catch (e) {
     console.error("❌ Failed to parse LLM evaluation response:", content);
     // Fallback: return a default low-score evaluation instead of crashing
@@ -311,7 +313,7 @@ Return plain text only (no markdown, no JSON).`;
     method: "POST",
     headers: {
       "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-      "HTTP-Referer": "http://localhost:3000",
+      "HTTP-Referer": OPENROUTER_REFERER,
       "X-Title": "AI Career Interview Copilot",
       "Content-Type": "application/json"
     },

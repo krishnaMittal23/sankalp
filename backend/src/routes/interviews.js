@@ -347,7 +347,9 @@ const prisma = new PrismaClient();
 // 🎯 MOVED TO TOP - Get all interviews (must be before /:id route!)
 router.get("/", async (req, res) => {
   try {
+    const { userName } = req.query;
     const interviews = await prisma.interview.findMany({
+      where: userName ? { userName } : undefined,
       include: {
         questions: true,
         transcripts: true,
