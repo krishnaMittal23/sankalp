@@ -475,7 +475,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <Analytics />
+        <Analytics interviews={interviews} />
 
         <div 
   className="relative bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-8 shadow-2xl overflow-hidden"

@@ -117,7 +117,7 @@ export async function POST(request) {
       );
     }
 
-    const { error: upsertError } = await supabase
+    const { data: upsertData, error: upsertError } = await supabase
       .from("users")
       .upsert([
         {
@@ -126,29 +126,18 @@ export async function POST(request) {
           email,
           phone,
         },
-      ], { onConflict: "id" });
+      ], { onConflict: "id" })
+      .select("uniquePresence")
+      .single();
 
-    if (upsertError) {
+    if (upsertError && !isMissingUniquePresenceColumn(upsertError)) {
       return NextResponse.json(
         { message: `Profile creation failed: ${upsertError.message}` },
         { status: 400 }
       );
     }
 
-    const { data: tokenData, error: tokenError } = await supabase
-      .from("users")
-      .select("uniquePresence")
-      .eq("id", createdUser.id)
-      .single();
-
-    if (tokenError && !isMissingUniquePresenceColumn(tokenError)) {
-      return NextResponse.json(
-        { message: `Profile creation failed: ${tokenError.message}` },
-        { status: 400 }
-      );
-    }
-
-    const uniquePresence = tokenData?.uniquePresence || `uid:${createdUser.id}`;
+    const uniquePresence = upsertData?.uniquePresence || `uid:${createdUser.id}`;
 
     return NextResponse.json({
       message: "Account created successfully",
